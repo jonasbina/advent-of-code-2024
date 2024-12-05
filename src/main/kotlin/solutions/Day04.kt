@@ -16,18 +16,18 @@ class Day04(
     
     override fun part1(test:Boolean): Any {
         val input = if(test) inputs.testInput else inputs.input
-        var total = 0
-        input.inputLines.forEachIndexed { y, line ->
-            line.forEachIndexed { x, c->
+        return input.inputLines.mapIndexed { y, line ->
+            line.mapIndexed { x, c->
                 if (c=='X'){
                     val point = Point2D(x, y)
-                    total+=Move.all().count {
-                       point.step(it,input.inputLines)
+                    Move.all().count {
+                        point.step(it,input.inputLines)
                     }
+                }else{
+                    0
                 }
-            }
-        }
-        return total
+            }.sum()
+        }.sum()
     }
     fun Point2D.step(move: Move, input:List<String>):Boolean{
         var dr = this
