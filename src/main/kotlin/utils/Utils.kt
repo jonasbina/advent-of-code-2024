@@ -17,6 +17,11 @@ fun <T> List<T>.uniqueTriples(): Sequence<Triple<T, T, T>> = sequence {
         }
     }
 }
+fun testPrintln(string: String, test:Boolean){
+    if (test){
+        println(string)
+    }
+}
 
 fun String.sorted(): String {
     return this.toList().sorted().joinToString(separator = "")

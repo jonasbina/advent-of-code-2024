@@ -32,7 +32,7 @@ data class Point2D(val x: Int, val y: Int) {
         return if (d < 0) d + 360 else d
     }
 
-    fun isInRange(size:Int):Boolean = x<size&&y<size&&x>=0&&y>=0
+    fun isInRange(xsize:Int,ysize:Int=xsize):Boolean = x<xsize&&y<ysize&&x>=0&&y>=0
     fun neighbors(): List<Point2D> =
         listOf(up(), down(), left(), right())
 
@@ -83,5 +83,14 @@ data class Move(val dx: Int, val dy: Int) {
             downLeft,
             downRight,
         )
+    }
+    fun turn90Deg():Move{
+        return when (this) {
+            up -> right
+            down -> left
+            left -> up
+            right -> down
+            else -> up
+        }
     }
 }
