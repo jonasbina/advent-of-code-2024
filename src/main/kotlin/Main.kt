@@ -1,5 +1,7 @@
 package com.jonasbina
 
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.File
 import kotlin.time.measureTime
 
@@ -44,9 +46,33 @@ class Day$dayAsString(
     val resFolder = File("src/main/resources/day$dayAsString")
     if (!resFolder.exists()) {
         resFolder.mkdir()
-        File(resFolder.path+"/test.txt")
+        File(resFolder.path + "/test.txt")
             .createNewFile()
-        File(resFolder.path+"/input.txt")
+        val inputFile = File(resFolder.path + "/input.txt")
+        inputFile
             .createNewFile()
+        inputFile.writeText(getInput(day))
     }
+}
+
+fun getInput(day: Int):String {
+    val client = OkHttpClient()
+
+    // Replace with your actual session cookie value
+    val sessionCookie = File("session.txt").readText()
+
+    val url = "https://adventofcode.com/2024/day/$day/input"
+    val request = Request.Builder()
+        .url(url)
+        .addHeader("Cookie", "session=$sessionCookie")
+        .build()
+    var res = ""
+    client.newCall(request).execute().use { response ->
+        if (response.isSuccessful) {
+            res = response.body?.string() ?: ""
+        } else {
+            println("Failed to fetch input: ${response.code}")
+        }
+    }
+    return res
 }
