@@ -7,7 +7,7 @@ fun main() {
     val input = InputUtils.getDayInputText(9)
     val testInput = InputUtils.getTestInputText(9)
     val inputs = Inputs(input, testInput)
-    Day09(inputs).run(correctResultPart1 = 1928, correctResultPart2 = 0)
+    Day09(inputs).run(correctResultPart1 = 1928, correctResultPart2 = 2858)
 }
 
 class Day09(
@@ -69,8 +69,7 @@ class Day09(
 
     override fun part2(test: Boolean): Any {
         val input = (if (test) inputs.testInput else inputs.input).input
-        val clusters = mutableListOf<List<Pair<String, Int>>>()
-        var cluster = mutableListOf<Pair<String, Int>>()
+
         var file = true
         var i = 0
         var id = 0
@@ -91,6 +90,51 @@ class Day09(
             i += digit
             file = !file
         }
+        var clusters = calculateClusters()
+        var numberClusters = clusters.second
+        var dotClusters = clusters.first
+        testPrintln(numberClusters.toString(), test)
+        var previous = emptyList<String>()
+        while (true) {
+            dotClusters.forEach { d ->
+                // i hope that files with multiple digit indexes count as a single dot
+                val n = numberClusters.filter { ncluster ->
+                    ncluster.first.size <= d.first.size && ncluster.first.first().second > d.first.first().second
+                }.firstOrNull()
+                if (n != null) {
+
+                    val dots = d.first
+                    //testPrintln(string.toString(),test)
+                    n.first.forEachIndexed { index, c ->
+                        val dot = dots[index]
+                        testPrintln(string, test)
+                        string[dot.second] = c.first
+                        string[c.second] = "."
+                        testPrintln(string, test)
+                    }
+                    clusters = calculateClusters()
+                    numberClusters = clusters.second
+                    dotClusters = clusters.first
+                }
+            }
+
+            if (previous == string) {
+                break
+            }
+            previous = string
+        }
+        println("calculating")
+        var sum = 0L
+        testPrintln(string.toString(), test)
+        string.filter { it.first().isDigit() }.forEachIndexed { ind, c ->
+            sum += c.toInt() * ind
+        }
+        return sum
+    }
+
+    fun calculateClusters(): Pair<MutableList<Pair<List<Pair<String, Int>>, Int>>, MutableList<Pair<List<Pair<String, Int>>, Int>>> {
+        val clusters = mutableListOf<List<Pair<String, Int>>>()
+        var cluster = mutableListOf<Pair<String, Int>>()
 
         string.forEachIndexed { i, it ->
             if (cluster.isEmpty()) {
@@ -104,47 +148,13 @@ class Day09(
                 }
             }
         }
-        var dotClusters =
-            clusters.mapIndexed { index, c -> c to index }.filter { it.first.any { it.first.first() == '.' } }
-                .toMutableList()
-        var numberClusters =
-            clusters.mapIndexed { index, c -> c to index }.filter { it.first.any { it.first.first().isDigit() } }
-                .reversed().toMutableList()
-
-        while (true) {
-            val d = dotClusters.first()
-            if (numberClusters.none { ncluster -> ncluster.first.joinToString("") { it.first }.length <= d.first.size }) {
-                break
-            } else {
-                val n = numberClusters.first { ncluster -> ncluster.first.joinToString("") { it.first }.length <= d.first.size }
-
-
-                numberClusters.remove(n)
-                numberClusters.add(n.first to d.second)
-                dotClusters.remove(d)
-                dotClusters.add(d.first to n.second)
-                dotClusters.sortBy {
-                    it.second
-                }
-                numberClusters.sortByDescending {
-                    it.second
-                }
-                val dots = d.first
-                testPrintln(string.toString(),test)
-                n.first.forEachIndexed { index, c ->
-                    val dot = dots[index]
-                    string[dot.second]=c.first
-                    string[c.second]="."
-                }
-                testPrintln(string.toString(),test)
-            }
+        if (cluster.isNotEmpty()) {
+            clusters.add(cluster)
         }
-        println("calculating")
-        var sum = 0L
-        testPrintln(string.toString(), test)
-        string.filter { it.first().isDigit() }.forEachIndexed { ind, c ->
-            sum += c.toInt() * ind
-        }
-        return sum
+        return clusters.mapIndexed { index, c -> c to index }.filter { it.first.any { it.first.first() == '.' } }
+            .toMutableList() to clusters.mapIndexed { index, c -> c to index }
+            .filter { it.first.any { it.first.first().isDigit() } }
+            .reversed()
+            .toMutableList()
     }
 }

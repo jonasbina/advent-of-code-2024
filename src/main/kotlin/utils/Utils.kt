@@ -17,7 +17,7 @@ fun <T> List<T>.uniqueTriples(): Sequence<Triple<T, T, T>> = sequence {
         }
     }
 }
-fun testPrintln(string: String, test:Boolean){
+fun testPrintln(string: Any, test:Boolean){
     if (test){
         println(string)
     }
