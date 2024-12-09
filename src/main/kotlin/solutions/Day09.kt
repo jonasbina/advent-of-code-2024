@@ -95,12 +95,18 @@ class Day09(
         var dotClusters = clusters.first
         testPrintln(numberClusters.toString(), test)
         var previous = emptyList<String>()
+        val clustersCompleted = mutableListOf<Int>()
+        println("doing work")
+
         while (true) {
             dotClusters.forEach { d ->
                 // i hope that files with multiple digit indexes count as a single dot
                 val n = numberClusters.filter { ncluster ->
-                    ncluster.first.size <= d.first.size && ncluster.first.first().second > d.first.first().second
+                    ncluster.first.size <= d.first.size && ncluster.first.first().second > d.first.first().second && !clustersCompleted.contains(ncluster.first.first().first.toInt())
                 }.firstOrNull()
+                clustersCompleted.addAll(numberClusters.reversed().dropWhile { it != n }.drop(1).map {
+                    it.first.first().first.toInt()
+                })
                 if (n != null) {
 
                     val dots = d.first
@@ -115,6 +121,9 @@ class Day09(
                     clusters = calculateClusters()
                     numberClusters = clusters.second
                     dotClusters = clusters.first
+                    clustersCompleted.add(
+                        n.first.first().first.toInt()
+                    )
                 }
             }
 
@@ -126,8 +135,9 @@ class Day09(
         println("calculating")
         var sum = 0L
         testPrintln(string.toString(), test)
-        string.filter { it.first().isDigit() }.forEachIndexed { ind, c ->
-            sum += c.toInt() * ind
+        //this motherfucking mistake of not counting the dots in index which didnt cause error in part 1 made me really mad
+        string.mapIndexed { index, s ->s to index  }.filter { it.first.first().isDigit() }.forEach{ c ->
+            sum += c.first.toInt() * c.second
         }
         return sum
     }
