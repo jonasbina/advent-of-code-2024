@@ -83,6 +83,12 @@ data class Move(val dx: Int, val dy: Int) {
             downLeft,
             downRight,
         )
+        fun allNonDiagonal() = listOf(
+            up,
+            down,
+            left,
+            right
+        )
     }
     fun turn90Deg():Move{
         return when (this) {

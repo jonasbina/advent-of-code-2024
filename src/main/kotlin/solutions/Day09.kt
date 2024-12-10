@@ -1,7 +1,12 @@
 package com.jonasbina.solutions
 
 import com.jonasbina.utils.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import kotlin.math.truncate
+import kotlin.system.measureTimeMillis
 
 fun main() {
     val input = InputUtils.getDayInputText(9)
@@ -10,6 +15,9 @@ fun main() {
     Day09(inputs).run(correctResultPart1 = 1928, correctResultPart2 = 2858)
 }
 
+/**Let's not talk about day 9 okay...
+ *
+ */
 class Day09(
     override val inputs: Inputs
 ) : Day(inputs) {
@@ -93,44 +101,23 @@ class Day09(
         var clusters = calculateClusters()
         var numberClusters = clusters.second
         var dotClusters = clusters.first
-        testPrintln(numberClusters.toString(), test)
-        var previous = emptyList<String>()
-        val clustersCompleted = mutableListOf<Int>()
-        println("doing work")
-
-        while (true) {
-            dotClusters.forEach { d ->
-                // i hope that files with multiple digit indexes count as a single dot
-                val n = numberClusters.filter { ncluster ->
-                    ncluster.first.size <= d.first.size && ncluster.first.first().second > d.first.first().second && !clustersCompleted.contains(ncluster.first.first().first.toInt())
-                }.firstOrNull()
-                clustersCompleted.addAll(numberClusters.reversed().dropWhile { it != n }.drop(1).map {
-                    it.first.first().first.toInt()
-                })
-                if (n != null) {
-
-                    val dots = d.first
-                    //testPrintln(string.toString(),test)
-                    n.first.forEachIndexed { index, c ->
-                        val dot = dots[index]
-                        testPrintln(string, test)
-                        string[dot.second] = c.first
-                        string[c.second] = "."
-                        testPrintln(string, test)
-                    }
-                    clusters = calculateClusters()
-                    numberClusters = clusters.second
-                    dotClusters = clusters.first
-                    clustersCompleted.add(
-                        n.first.first().first.toInt()
-                    )
+        for (n in numberClusters){
+            val d = dotClusters.firstOrNull { cluster ->
+                cluster.first.size >= n.first.size && cluster.first.first().second < n.first.first().second
+            }
+            if (d != null){
+                val dots = d.first
+                n.first.forEachIndexed { index, c ->
+                    val dot = dots[index]
+                    testPrintln(string, test)
+                    string[dot.second] = c.first
+                    string[c.second] = "."
+                    testPrintln(string, test)
                 }
+                clusters = calculateClusters()
+                numberClusters = clusters.second
+                dotClusters = clusters.first
             }
-
-            if (previous == string) {
-                break
-            }
-            previous = string
         }
         println("calculating")
         var sum = 0L
