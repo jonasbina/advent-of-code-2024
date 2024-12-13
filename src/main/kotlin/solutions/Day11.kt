@@ -6,6 +6,7 @@ import com.jonasbina.utils.Inputs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.math.BigInteger
 
 fun main() {
     val input = InputUtils.getDayInputText(11)
@@ -23,15 +24,14 @@ class Day11(
         return calculateStoneSize(input.input, 25)
     }
 
-    fun calculateStoneSize(input: String, repeatTimes: Int): Long {
-        val stonesList = input.split(" ").map { it.toLong() }
-        val stones = LongArray(stonesList.size){stonesList[it]}
-        var map = mutableMapOf<Long,Long>()
-        stones.forEach { stone ->
+    fun calculateStoneSize(input: String, repeatTimes: Int): BigInteger {
+        val stonesList = input.split(" ").map { it.toBigInteger() }
+        var map = mutableMapOf<BigInteger,Long>()
+        stonesList.forEach { stone ->
             map[stone] = (map[stone]?:0L) + 1L
         }
         repeat(repeatTimes) {
-            val newMap = mutableMapOf<Long,Long>()
+            val newMap = mutableMapOf<BigInteger,Long>()
             map.forEach { (t, u) ->
                 val newList = t.blink()
                 newList.forEach {newVal->
@@ -41,8 +41,8 @@ class Day11(
             map = newMap
         }
         return map.map {
-            it.value
-        }.sum()
+            it.value.toBigInteger()
+        }.sumOf { it }
     }
 
     override fun part2(test: Boolean): Any {
@@ -51,18 +51,18 @@ class Day11(
     }
 
 
-    fun Long.blink(): List<Long> {
+    fun BigInteger.blink(): List<BigInteger> {
         val stringNum = this.toString()
-        if (this == 0L) {
-            return listOf(1)
+        if (this == BigInteger.ZERO) {
+            return listOf(BigInteger.ONE)
         }
         if (stringNum.length % 2 == 0) {
             val halfLength = stringNum.length / 2
-            val firstPart = stringNum.substring(0, halfLength).toLong()
-            val secondPart = stringNum.substring(halfLength).toLong()
+            val firstPart = stringNum.substring(0, halfLength).toBigInteger()
+            val secondPart = stringNum.substring(halfLength).toBigInteger()
             return listOf(firstPart, secondPart)
         }
-        return listOf(this * 2024L)
+        return listOf(this * BigInteger.valueOf(2024L))
     }
 
 }

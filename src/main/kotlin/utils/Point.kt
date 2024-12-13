@@ -1,9 +1,10 @@
 package com.jonasbina.utils
 
+import kotlinx.serialization.Serializable
 import java.lang.Math.toDegrees
 import kotlin.math.abs
 import kotlin.math.atan2
-
+@Serializable
 data class Point2D(val x: Int, val y: Int) {
 
     fun up() = applyMove(Move.up)
@@ -31,7 +32,28 @@ data class Point2D(val x: Int, val y: Int) {
         ) + 90
         return if (d < 0) d + 360 else d
     }
-
+    fun corners(input:List<String>, char: Char): Int {
+        var c = 0
+        Move.allNonDiagonal().forEach { (dx, dy) ->
+            val point1 = Point2D(x+dx,y)
+            val point2 = Point2D(x,y+dy)
+            val point3 = Point2D(x+dx,y+dy)
+            if (point1.getInput(input) != char && point2.getInput(input) != char)
+                c++ // outer corner
+            if (point1.getInput(input) == char && point2.getInput(input) == char && point3.getInput(input) != char)
+                c++ // inner corner
+        }
+        return c
+    }
+    fun getInput(
+        input: List<String>
+    ):Char?{
+        return if (isInRange(input.size)){
+            input[y.toInt()][x.toInt()]
+        }else{
+            null
+        }
+    }
     fun isInRange(xsize:Int,ysize:Int=xsize):Boolean = x<xsize&&y<ysize&&x>=0&&y>=0
     fun neighbors(): List<Point2D> =
         listOf(up(), down(), left(), right())
@@ -54,13 +76,13 @@ data class Point2D(val x: Int, val y: Int) {
         val ORIGIN = Point2D(0, 0)
         val readerOrder: Comparator<Point2D> = Comparator { o1, o2 ->
             when {
-                o1.y != o2.y -> o1.y - o2.y
-                else -> o1.x - o2.x
+                o1.y != o2.y -> (o1.y - o2.y).toInt()
+                else -> (o1.x - o2.x).toInt()
             }
         }
     }
 }
-
+@Serializable
 data class Move(val dx: Int, val dy: Int) {
     companion object {
         val up = Move(0, -1)
@@ -90,6 +112,16 @@ data class Move(val dx: Int, val dy: Int) {
             right
         )
     }
+    fun opposite():Move{
+        return when (this) {
+            up -> down
+            down -> up
+            left -> right
+            right -> left
+            else -> up
+        }
+    }
+
     fun turn90Deg():Move{
         return when (this) {
             up -> right

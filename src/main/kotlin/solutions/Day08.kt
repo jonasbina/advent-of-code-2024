@@ -2,8 +2,6 @@ package com.jonasbina.solutions
 
 import com.jonasbina.utils.*
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 fun main() {
     val input = InputUtils.getDayInputText(8)

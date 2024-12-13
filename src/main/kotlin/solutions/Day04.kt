@@ -1,7 +1,6 @@
 package com.jonasbina.solutions
 
 import com.jonasbina.utils.*
-import java.awt.Point
 
 fun main() {
     val input = InputUtils.getDayInputText(4)

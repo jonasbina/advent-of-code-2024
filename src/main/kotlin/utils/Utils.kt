@@ -2,7 +2,7 @@ package com.jonasbina.utils
 
 fun <T> List<T>.uniquePairs(): Sequence<Pair<T, T>> = sequence {
     for (i in 0..lastIndex) {
-        for (j in i+1..lastIndex) {
+        for (j in i + 1..lastIndex) {
             yield(get(i) to get(j))
         }
     }
@@ -17,8 +17,9 @@ fun <T> List<T>.uniqueTriples(): Sequence<Triple<T, T, T>> = sequence {
         }
     }
 }
-fun testPrintln(string: Any, test:Boolean){
-    if (test){
+
+fun testPrintln(string: Any, test: Boolean) {
+    if (test) {
         println(string)
     }
 }
@@ -151,6 +152,30 @@ fun Sequence<Int>.product(): Long {
     }
     return product
 }
+fun gcd(a: Long, b: Long): Long {
+    var num1 = a
+    var num2 = b
+    while (num2 != 0L) {
+        val temp = num2
+        num2 = num1 % num2
+        num1 = temp
+    }
+    return num1
+}
+fun extendedGCD(a: Long, b: Long):ExtendedGcdResult {
+    if (b == 0L) {
+        return ExtendedGcdResult(a, 1, 0)
+    }
+    val (g, x1, y1) = extendedGCD(b, a % b)
+    val x = y1
+    val y = x1 - (a / b) * y1
+    return ExtendedGcdResult(g, x, y)
+}
+data class ExtendedGcdResult(
+    val g:Long,
+    val x:Long,
+    val y:Long
+)
 
 @JvmName("productLong")
 fun Sequence<Long>.product(): Long {
@@ -159,4 +184,12 @@ fun Sequence<Long>.product(): Long {
         product *= element
     }
     return product
+}
+
+class TestPrintler(val test: Boolean) {
+    fun println(s: Any) {
+        if (test) {
+            kotlin.io.println(s)
+        }
+    }
 }
