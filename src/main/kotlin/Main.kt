@@ -69,7 +69,7 @@ fun getInput(day: Int):String {
     var res = ""
     client.newCall(request).execute().use { response ->
         if (response.isSuccessful) {
-            res = response.body?.string() ?: ""
+            res = response.body?.string()?.trim() ?: ""
         } else {
             println("Failed to fetch input: ${response.code}")
         }
