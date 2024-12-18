@@ -8,7 +8,7 @@ fun main() {
     val input = InputUtils.getDayInputText(18)
     val testInput = InputUtils.getTestInputText(18)
     val inputs = Inputs(input, testInput)
-    Day18(inputs).run(correctResultPart1 = 0, correctResultPart2 = 0)
+    Day18(inputs).run(correctResultPart1 = 22, correctResultPart2 = "6,1")
     PApplet.main(Day18PApplet().javaClass)
 }
 
@@ -93,7 +93,7 @@ class Day18(
         return finishingCoord.x.toString() + "," + finishingCoord.y
     }
 
-    var i = 1024
+    var i = 12
     fun part2Visual(test: Boolean, pApplet: PApplet) {
         val input = if (test) inputs.testInput else inputs.input
         val barriers = input.inputLines.mapIndexed { i, line ->
@@ -103,15 +103,15 @@ class Day18(
             Point2D(split[0], split[1])
         }.take(i)
         val s = solveForBarriers(test, barriers)
+        val end = if (test) Point2D(6, 6) else Point2D(70, 70)
+        val size = pApplet.height.toFloat() / (end.x + 1)
+        barriers.forEach { bar ->
+            pApplet.fill(255)
+            pApplet.rect((size * bar.x).toFloat(), (size * bar.y).toFloat(), size.toFloat(), size.toFloat())
+        }
         if (s == null){
             solved=true
         }else{
-            val end = if (test) Point2D(6, 6) else Point2D(70, 70)
-            val size = pApplet.height.toFloat() / (end.x + 1)
-            barriers.forEach { bar ->
-                pApplet.fill(255)
-                pApplet.rect((size * bar.x).toFloat(), (size * bar.y).toFloat(), size.toFloat(), size.toFloat())
-            }
             s.path.forEach {
                 pApplet.fill(255f, 100f, 100f)
                 pApplet.rect(
@@ -135,6 +135,7 @@ class Day18PApplet : PApplet() {
 
     override fun setup() {
         background(0)
+        frameRate(320f)
     }
     var frames = 0
     override fun draw(){
