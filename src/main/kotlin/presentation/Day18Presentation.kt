@@ -10,6 +10,9 @@ class Day18Presentation : PApplet() {
     val input = InputUtils.getDayInputText(18)
     val testInput = InputUtils.getTestInputText(18)
     val inputs = Inputs(input, testInput)
+    var amountOfPathDisplayed = 0
+    var part1 = true
+    lateinit var path:List<Point2D>
     override fun settings() {
         fullScreen()
     }
@@ -22,9 +25,17 @@ class Day18Presentation : PApplet() {
     override fun draw(){
         if (frames%1==0&&!solved){
             background(0)
-            part2Visual(false)
+            part1Visual(false)
         }
         frames++
+    }
+    override fun keyPressed() {
+        if (key=='1'){
+            part1 = true
+        }
+        if (key=='2'){
+            part1 = false
+        }
     }
     fun solveForBarriers(test: Boolean, barriers: List<Point2D>): AStarResult<Point2D>? {
         val start = Point2D(0, 0)

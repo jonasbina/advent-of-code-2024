@@ -12,7 +12,7 @@ fun main() {
     val input = InputUtils.getDayInputText(17)
     val testInput = InputUtils.getTestInputText(17)
     val inputs = Inputs(input, testInput)
-    Day17(inputs).run(correctResultPart1 = "5,7,3,0", correctResultPart2 = 117440)
+    Day17(inputs).run(correctResultPart1 = "5,7,3,0", correctResultPart2 = 117440L)
 }
 
 class Day17(
@@ -107,43 +107,31 @@ class Day17(
     )
 
     override fun part2(test: Boolean): Any {
-        if (test) return 0L
-        val min = 0L
-        val max = 999999999999999
-        var solution = 0L
-        var population = Array(10000){ Random((System.currentTimeMillis()*it).toInt()).nextLong(min,max)}
-        while (solution==0L){
-            val sorted = population.map {
-                it to simulateForA(it)
-            }.map {
-                it to calculateSimilarity(it.second, actions)
-            }.sortedByDescending { it.second }
-            println(sorted.first().second)
-            val correct = sorted.firstOrNull { it.first.second==actions}
-            if (correct!=null){
-                solution = correct.first.first
-            }
-            val best = sorted.map {x->
-                Array(x.second){x.first}.toList()
-            }.flatten().map { it.first }.shuffled().take(sorted.size/100)
-            val new = best.toMutableSet()
-            while (new.size!=10000){
-                val random = best.shuffled().first()
-                val mutation = if (Random.nextDouble() < 0.5) Random.nextLong(-100, 100) else Random.nextLong(-100000, 100000)
-                new.add(random + mutation)
-            }
-            population=new.toTypedArray()
+        if (test) return bruteforcePart2()
+
+        ip = 0
+        printHistory.clear()
+        val inputLines = if (test) inputs.testInput.inputLines else inputs.input.inputLines
+        registerA = 0
+        registerB = 0
+        registerC = 0
+        actions.map {
+            it
         }
-        return solution
+        return 0
     }
-    fun calculateSimilarity(l1:List<Int>,l2:List<Int>): Int {
-        println(l1.size to l2.size)
-        if (l1.size!=l2.size) return maxOf(l1.size,l2.size)-abs(l2.size-l1.size)
-        val difference = l1.mapIndexed { index, i ->
-            abs(i-l2[i])
-        }.sum()
-        println(difference)
-        return l1.size*10-difference
+    /**
+     *Would take like 50ys for the full input :)
+    */
+    fun bruteforcePart2():Long{
+        var a=1L
+        while (a<Long.MAX_VALUE){
+            if (simulateForA(a)==actions){
+                break
+            }
+            a++
+        }
+        return a
     }
 
     fun simulateForA(a:Long):List<Int>{
@@ -155,7 +143,6 @@ class Day17(
         while (ip < actions.lastIndex/*intentionally < not <= so i can get the next element too :)*/) {
             Action(actions[ip].toLong(), actions[ip + 1].toLong()).apply()
         }
-        println(printHistory)
         return printHistory.map { it.toInt() }
     }
 }
