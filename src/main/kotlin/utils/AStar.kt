@@ -177,28 +177,38 @@ fun <Node> aStarFindAllPaths(
     start: Node,
     isEnd: (Node) -> Boolean,
     next: (Node) -> Iterable<Pair<Node, Int>>,
-    heuristicCostToEnd: (Node) -> Int
+    heuristicCostToEnd: (Node) -> Int,
+    costLimit: Int = Int.MAX_VALUE
 ): List<AStarResult<Node>> {
-    val allPaths = mutableListOf<AStarResult<Node>>()
-    val openSet = PriorityQueue<PathState<Node>>(compareBy { it.estimatedTotalCost })
-    openSet.add(PathState(start, 0, heuristicCostToEnd(start), listOf(start)))
+    val paths = ArrayList<AStarResult<Node>>()
+    val open = PriorityQueue<PathState<Node>> { a, b -> a.estimatedTotalCost.compareTo(b.estimatedTotalCost) }
+    val costs = HashMap<Node, Int>()
 
-    while (openSet.isNotEmpty()) {
-        val currentState = openSet.poll()
+    open.offer(PathState(start, 0, heuristicCostToEnd(start), ArrayList<Node>().apply { add(start) }))
+    costs[start] = 0
 
-        if (isEnd(currentState.currentNode)) {
-            allPaths.add(AStarResult(currentState.path, currentState.costFromStart))
+    while (!open.isEmpty()) {
+        val curr = open.poll()
+        if (curr.costFromStart > costLimit) continue
+
+        if (isEnd(curr.currentNode)) {
+            paths.add(AStarResult(curr.path, curr.costFromStart))
             continue
         }
-        for ((neighbor, cost) in next(currentState.currentNode)) {
-            val newCostFromStart = currentState.costFromStart + cost
-            val newPath = currentState.path + neighbor
-            val estimatedCost = newCostFromStart + heuristicCostToEnd(neighbor)
-            openSet.add(PathState(neighbor, newCostFromStart, estimatedCost, newPath))
+
+        next(curr.currentNode).forEach { (n, c) ->
+            val newCost = curr.costFromStart + c
+            if (newCost <= costLimit &&
+                newCost <= (costs[n] ?: Int.MAX_VALUE) &&
+                !curr.path.contains(n)) {
+                val newPath = ArrayList(curr.path).apply { add(n) }
+                open.offer(PathState(n, newCost, newCost + heuristicCostToEnd(n), newPath))
+                costs[n] = newCost
+            }
         }
     }
 
-    return allPaths
+    return paths.apply { sortBy { it.cost } }
 }
 
 private data class PathState<Node>(

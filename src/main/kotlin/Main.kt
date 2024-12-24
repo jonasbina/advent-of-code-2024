@@ -56,5 +56,23 @@ class Day$dayAsString(
 }
 
 fun getInput(day: Int):String {
-    return ""
+    val client = OkHttpClient()
+
+    // Replace with your actual session cookie value
+    val sessionCookie = File("session.txt").readText()
+
+    val url = "https://adventofcode.com/2024/day/$day/input"
+    val request = Request.Builder()
+        .url(url)
+        .addHeader("Cookie", "session=$sessionCookie")
+        .build()
+    var res = ""
+    client.newCall(request).execute().use { response ->
+        if (response.isSuccessful) {
+            res = response.body?.string()?.trim() ?: ""
+        } else {
+            println("Failed to fetch input: ${response.code}")
+        }
+    }
+    return res
 }

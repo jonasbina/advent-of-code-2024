@@ -59,17 +59,17 @@ class Day17(
     }
 
     fun adv(operand: Long) {
-        registerA = (registerA / 2.0.pow(operand.toDouble())).toInt().toLong()
+        registerA = (registerA / 2.0.pow(operand.toDouble())).toLong()
         ip += 2
     }
 
     fun bxl(operand: Long) {
-        registerB = registerB.xor(operand).toInt().toLong()
+        registerB = registerB.xor(operand).toLong()
         ip += 2
     }
 
     fun bst(operand: Long) {
-        registerB = (operand % 8).toInt().toLong()
+        registerB = (operand % 8).toLong()
         ip += 2
     }
 
@@ -82,7 +82,7 @@ class Day17(
     }
 
     fun bxc(operand: Long) {
-        registerB = registerB.xor(registerC).toInt().toLong()
+        registerB = registerB.xor(registerC)
         ip += 2
     }
 
@@ -92,12 +92,12 @@ class Day17(
     }
 
     fun bdv(operand: Long) {
-        registerB = (registerA / 2.0.pow(operand.toDouble())).toInt().toLong()
+        registerB = (registerA / 2.0.pow(operand.toDouble())).toLong()
         ip += 2
     }
 
     fun cdv(operand: Long) {
-        registerC = (registerA / 2.0.pow(operand.toDouble())).toInt().toLong()
+        registerC = (registerA / 2.0.pow(operand.toDouble())).toLong()
         ip += 2
     }
 
@@ -107,26 +107,46 @@ class Day17(
     )
 
     override fun part2(test: Boolean): Any {
-        if (test) return bruteforcePart2()
-
-        ip = 0
-        printHistory.clear()
-        val inputLines = if (test) inputs.testInput.inputLines else inputs.input.inputLines
-        registerA = 0
-        registerB = 0
-        registerC = 0
-        actions.map {
-            it
+        var correctAs = mutableSetOf<String>()
+        for (i in 1..actions.size){
+            val currentActions = actions.takeLast(i)
+            val newCorrectAs = correctAs.toMutableList()
+            for (correctA in correctAs) {
+                val list = (0L..7L).toList().mapNotNull { a ->
+                    val value = correctA.toLong()*8L+a
+                    val simulated = simulateForA(value)
+                    if(simulated == currentActions) value else null
+                }
+                if (list.isEmpty()) {
+                    newCorrectAs.removeAt(newCorrectAs.indexOf(correctA))
+                } else {
+                    newCorrectAs[newCorrectAs.indexOf(correctA)] = list[0].toString()
+                    list.drop(1).forEach {
+                        newCorrectAs.add(it.toString())
+                    }
+                }
+            }
+            if (i==1) {
+                for (a in 0L..7L) {
+                    if (simulateForA(a) == currentActions) {
+                        newCorrectAs.add(a.toString())
+                    }
+                }
+            }
+            correctAs = newCorrectAs.toMutableSet()
         }
-        return 0
+        return correctAs.minByOrNull {
+            it.length
+        }?.toLong()?:0L
     }
+
     /**
      *Would take like 50ys for the full input :)
-    */
-    fun bruteforcePart2():Long{
-        var a=1L
-        while (a<Long.MAX_VALUE){
-            if (simulateForA(a)==actions){
+     */
+    fun bruteforcePart2(): Long {
+        var a = 1L
+        while (a < Long.MAX_VALUE) {
+            if (simulateForA(a) == actions) {
                 break
             }
             a++
@@ -134,7 +154,7 @@ class Day17(
         return a
     }
 
-    fun simulateForA(a:Long):List<Int>{
+    fun simulateForA(a: Long): List<Int> {
         ip = 0
         printHistory.clear()
         registerA = a
@@ -144,5 +164,18 @@ class Day17(
             Action(actions[ip].toLong(), actions[ip + 1].toLong()).apply()
         }
         return printHistory.map { it.toInt() }
+    }
+
+    fun simulateOutput(a: Long): Long {
+        registerA = a
+        registerB = 0
+        registerC = 0
+        registerB = registerA % 8
+        registerB = registerB.xor(3)
+        registerC = (registerA / (2.0.pow(registerB.toDouble()))).toLong()
+        registerB = registerB.xor(registerC)
+        //i can divide the A here by 8 but its quite useless to do here
+        registerB = registerB.xor(5)
+        return registerB % 8
     }
 }

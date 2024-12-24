@@ -2,8 +2,10 @@ package com.jonasbina.utils
 
 import kotlinx.serialization.Serializable
 import java.lang.Math.toDegrees
+import java.rmi.UnexpectedException
 import kotlin.math.abs
 import kotlin.math.atan2
+
 @Serializable
 data class Point2D(val x: Int, val y: Int) {
 
@@ -17,7 +19,7 @@ data class Point2D(val x: Int, val y: Int) {
     fun downLeft() = applyMove(Move.downLeft)
     fun downRight() = applyMove(Move.downRight)
 
-    fun isLegal(maxX:Int,maxY:Int,minX:Int=0, minY:Int=0) = x>=minX && y>=minY && x<=maxX && y<=maxY
+    fun isLegal(maxX: Int, maxY: Int, minX: Int = 0, minY: Int = 0) = x >= minX && y >= minY && x <= maxX && y <= maxY
 
     fun distanceTo(other: Point2D): Int =
         abs(x - other.x) + abs(y - other.y)
@@ -32,29 +34,18 @@ data class Point2D(val x: Int, val y: Int) {
         ) + 90
         return if (d < 0) d + 360 else d
     }
-    fun corners(input:List<String>, char: Char): Int {
-        var c = 0
-        Move.allNonDiagonal().forEach { (dx, dy) ->
-            val point1 = Point2D(x+dx,y)
-            val point2 = Point2D(x,y+dy)
-            val point3 = Point2D(x+dx,y+dy)
-            if (point1.getInput(input) != char && point2.getInput(input) != char)
-                c++ // outer corner
-            if (point1.getInput(input) == char && point2.getInput(input) == char && point3.getInput(input) != char)
-                c++ // inner corner
-        }
-        return c
-    }
+
     fun getInput(
         input: List<String>
-    ):Char?{
-        return if (isInRange(input.size)){
-            input[y.toInt()][x.toInt()]
-        }else{
+    ): Char? {
+        return if (isInRange(input[0].length,input.size)) {
+            input[y][x]
+        } else {
             null
         }
     }
-    fun isInRange(xsize:Int,ysize:Int=xsize):Boolean = x<xsize&&y<ysize&&x>=0&&y>=0
+
+    fun isInRange(xsize: Int, ysize: Int = xsize): Boolean = x < xsize && y < ysize && x >= 0 && y >= 0
     fun neighbors(): List<Point2D> =
         listOf(up(), down(), left(), right())
 
@@ -82,6 +73,7 @@ data class Point2D(val x: Int, val y: Int) {
         }
     }
 }
+
 @Serializable
 data class Move(val dx: Int, val dy: Int) {
     companion object {
@@ -105,14 +97,32 @@ data class Move(val dx: Int, val dy: Int) {
             downLeft,
             downRight,
         )
+
         fun allNonDiagonal() = listOf(
             up,
             down,
             left,
             right
         )
+
+        fun fromArrow(c: Char) = when (c) {
+            '^' -> up
+            '>' -> right
+            '<' -> left
+            'v' -> down
+            else -> throw IllegalArgumentException("$c")
+        }
     }
-    fun opposite():Move{
+
+    fun toArrow() = when (this) {
+        up -> '^'
+        right -> '>'
+        left -> '<'
+        down -> 'v'
+        else -> throw UnexpectedException("This has to be up down left right idiot")
+    }
+
+    fun opposite(): Move {
         return when (this) {
             up -> down
             down -> up
@@ -122,7 +132,7 @@ data class Move(val dx: Int, val dy: Int) {
         }
     }
 
-    fun turn90Deg():Move{
+    fun turn90Deg(): Move {
         return when (this) {
             up -> right
             down -> left
