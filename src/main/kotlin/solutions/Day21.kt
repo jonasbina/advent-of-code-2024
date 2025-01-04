@@ -6,83 +6,78 @@ fun main() {
     val input = InputUtils.getDayInputText(21)
     val testInput = InputUtils.getTestInputText(21)
     val inputs = Inputs(input, testInput)
-    Day21(inputs).run(correctResultPart1 = 0, correctResultPart2 = 0)
+    Day21(inputs).run(correctResultPart1 = 126384L, correctResultPart2 = 0)
 }
 
 class Day21(
     override val inputs: Inputs
 ) : Day(inputs) {
-    val numericKeyboard = listOf(
-        "789",
-        "456",
-        "123",
-        " 0A"
+    val numericKeyboardMap = mapOf(
+        '7' to Point2D(0, 0),
+        '8' to Point2D(1, 0),
+        '9' to Point2D(2, 0),
+        '4' to Point2D(0, 1),
+        '5' to Point2D(1, 1),
+        '6' to Point2D(2, 1),
+        '1' to Point2D(0, 2),
+        '2' to Point2D(1, 2),
+        '3' to Point2D(2, 2),
+        '0' to Point2D(1, 3),
+        'A' to Point2D(2, 3),
     )
-    val arrowKeyboard = listOf(
-        " ^A",
-        "<v>"
+    val arrowKeyboardMap = mapOf(
+        '0' to Point2D(1, 0),
+        '2' to Point2D(0, 1),
+        '1' to Point2D(1, 1),
+        '3' to Point2D(2, 1),
+        '4' to Point2D(2, 0),
     )
 
     override fun part1(test: Boolean): Any {
         val inputLines = if (test) inputs.testInput.inputLines else inputs.input.inputLines
-        return inputLines.sumOf {
-            val l = listOf(it).convertUsingKeyboard(numericKeyboard)
-                .convertUsingKeyboard(arrowKeyboard)
-                .convertUsingKeyboard(arrowKeyboard)
-            val str = l.minBy { it.length }
-            val x = str.length
-            println(str)
-            it.filter { it.isDigit() }.toInt() * x
-        }
-    }
-
-
-    fun List<String>.convertUsingKeyboard(keyboard: List<String>): List<String> {
-
-        val start = keyboard.coordinatesOf('A')
-
-        val listList=this.map {combination->
-            var cur = start
-            val list = combination.map {c->
-                val end = keyboard.coordinatesOf(c)
-                val r = findAllPaths(keyboard,cur,end)
-                cur = end
-                r
+        return inputLines.sumOf { s ->
+            var l = s.convertUsingNumpad().split(aRegex).groupingBy { it }.eachCount().map { it.key to it.value.toLong() }.toMap()
+            repeat(2){
+                l = l.convertUsingKeyboard()
             }
-            generateCombinations(list.map { it.toList() })
-        }
-        return generateCombinations(listList)
-    }
-    val cache = mutableMapOf<Pair<Int, String>, List<String>>()
-
-    fun generateCombinations(lists: List<List<String>>): List<String> {
-        if (lists.size == 1) return lists[0]
-        println("launched")
-        val indexes = Array(lists.size){0}
-        val list = mutableSetOf<String>()
-        outer@while (true){
-            list.addAll(lists.mapIndexed { index, strings ->
-                strings[indexes[index]]
-            })
-            indexes[indexes.lastIndex]=indexes[indexes.lastIndex]+1
-            for(index in lists.indices.reversed()){
-                val it = indexes[index]
-                if (it>lists[index].lastIndex){
-                    if (index==0){
-                        break@outer
-                    }
-                    indexes[index]=0
-                    indexes[index-1]++
-                }
+            s.filter { it.isDigit() }.toLong() * l.toList().sumOf {
+                it.second*it.first.length
             }
         }
-        println("done $list")
-        return list.toList()
     }
-    fun findAllPaths(keyboard: List<String>, current: Point2D, end: Point2D): Set<String> {
-        val gap = keyboard.coordinatesOf(' ')
-        val xMoves = mutableSetOf<Move>()
-        val yMoves = mutableSetOf<Move>()
+    var uniqueCombinations = mutableListOf<String>()
+    val chunkMemo = mutableMapOf<String, String>()
+    val aRegex = Regex("(?<=4)")
+    private fun Map<String,Long>.convertUsingKeyboard(): Map<String,Long> {
+        var cur='4'
+        val nextMap = mutableMapOf<String,Long>()
+        this.forEach { t, u ->
+            chunkMemo.getOrPut(t) {
+                t.map { c ->
+                    val r = memo.getOrPut(cur to c) { findPath(arrowKeyboardMap[cur]!!, arrowKeyboardMap[c]!!, false) }
+                    cur = c
+                    r
+                }.joinToString("")
+            }.split(aRegex).forEach {
+                nextMap[it] = (nextMap[it]?:0L) + u
+            }
+        }
+        return nextMap
+    }
+    private fun String.convertUsingNumpad(): String {
+        var cur = numericKeyboardMap['A']!!
+        return this.map { c ->
+            val end = numericKeyboardMap[c]!!
+            val r = findPath(cur, end, true)
+            cur = end
+            r
+        }.joinToString("")
+    }
+
+    val memo = mutableMapOf<Pair<Char, Char>, String>()
+    fun findPath(current: Point2D, end: Point2D, numpad: Boolean): String {
+        val xMoves = mutableListOf<Move>()
+        val yMoves = mutableListOf<Move>()
         if (current.x < end.x) {
             repeat(end.x - current.x) {
                 xMoves.add(Move.right)
@@ -103,31 +98,70 @@ class Day21(
                 yMoves.add(Move.up)
             }
         }
-        var paths = setOf(yMoves + xMoves, xMoves + yMoves).filter {
-            var c = current
-            it.forEach { m ->
-                c = c.applyMove(m)
-                if (c == gap) return@filter false
+        var path: List<Move> = listOf()
+        if (numpad) {
+            if (current.y == 3 && end.x == 0) {
+                path = yMoves + xMoves
+            } else {
+                if (current.x == 0 && end.y == 3) {
+                    path = xMoves + yMoves
+                } else {
+                    if (xMoves.isNotEmpty() && yMoves.isNotEmpty()) {
+                        if (xMoves[0] == Move.left) {
+                            path = xMoves + yMoves
+                        } else {
+                            path = yMoves + xMoves
+                        }
+                    }
+                }
             }
-            true
-        }.toSet()
-        if (paths.isEmpty()){
-            val c:Pair<Point2D,Move?> = current to null
-            paths = setOf(aStarSearch(c,{c.first==end}, next = {Move.allNonDiagonal().map { move-> (it.first.applyMove(move) to move) to 1 }.filter { it.first.first!=gap }},{it.first.distanceTo(end)})!!.path.drop(1).map {
-                it.second!!
-            }.toSet())
+        } else {
+            if (current.x == 0) {
+                path = xMoves + yMoves
+            } else {
+                if (end.x == 0) {
+                    path = yMoves + xMoves
+                } else {
+                    if (xMoves.isNotEmpty() && yMoves.isNotEmpty()) {
+                        if (xMoves[0] == Move.left) {
+                            path = xMoves + yMoves
+                        } else {
+                            path = yMoves + xMoves
+                        }
+                    }
+                }
+            }
         }
 
-        return paths.map {
-            it.map { it.toArrow() }
-                .joinToString("") + "A"
-        }.toSet()
+        if (path.isEmpty()) {
+            path = xMoves + yMoves
+        }
+
+        val intPath = path.joinToString("") { it.toIntIdentifier().toString() } + 4
+        return intPath
 
     }
 
     override fun part2(test: Boolean): Any {
         val inputLines = if (test) inputs.testInput.inputLines else inputs.input.inputLines
-        return 0
+        return inputLines.sumOf { s ->
+            var l = s.convertUsingNumpad().split(aRegex).groupingBy { it }.eachCount().map { it.key to it.value.toLong() }.toMap()
+            repeat(25){
+                l = l.convertUsingKeyboard()
+            }
+            s.filter { it.isDigit() }.toLong() * l.toList().sumOf {
+                it.second*it.first.length
+            }
+        }
+    }
+}
+fun Char.convertToMove():Move{
+    return when(this){
+        '<' -> Move.left
+        '>' -> Move.right
+        '^' -> Move.up
+        'v' -> Move.down
+        else -> throw IllegalArgumentException("Invalid char $this")
     }
 }
 

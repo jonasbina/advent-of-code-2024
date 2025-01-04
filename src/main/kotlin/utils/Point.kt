@@ -121,6 +121,13 @@ data class Move(val dx: Int, val dy: Int) {
         down -> 'v'
         else -> throw UnexpectedException("This has to be up down left right idiot")
     }
+    fun toIntIdentifier():Byte = when (this) {
+        up -> 0
+        right -> 3
+        left -> 2
+        down -> 1
+        else -> throw UnexpectedException("This has to be up down left right idiot")
+    }
 
     fun opposite(): Move {
         return when (this) {
